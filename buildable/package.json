@@ -5,8 +5,11 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:docker": "docker compose up -d",
     "build": "vue-tsc && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "preview:docker": "docker compose -f docker-compose.prod.yml up -d",
+    "stop": "docker compose down -v && docker compose rm --stop --force -v hitower && docker rmi buildable-hitower"
   },
   "dependencies": {
     "vue": "^3.3.4"

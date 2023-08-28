@@ -1,0 +1,16 @@
+# default + local use
+version: '3.7'
+
+services:
+  hitower:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: local
+    volumes:
+      - './src:/home/app/src'
+    container_name: 'vue3_todo'
+    expose:
+      - '4010'
+    ports:
+      - '4010:4010'

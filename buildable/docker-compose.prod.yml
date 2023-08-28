@@ -1,0 +1,12 @@
+# production container
+version: '3.7'
+
+services:
+  hitower:
+    build:
+      target: prod
+    container_name: 'vue3_todo_prod'
+    expose:
+      - '4011'
+    ports:
+      - '4011:4011'
