@@ -1,33 +1,27 @@
 <script setup lang="ts">
-import HelloWorld from './components/HelloWorld.vue';
+import { ref } from 'vue';
+import TheSnackbar from './components/TheSnackbar.vue';
+
+const showSnackbar = ref<boolean>(false);
+
+function openSnackbar() {
+  if (showSnackbar.value === true) {
+    return;
+  }
+
+  showSnackbar.value = true;
+}
+
+function closeSnackbar() {
+  showSnackbar.value = false;
+}
 </script>
 
 <template>
-  <div>
-    <a href="https://vitejs.dev" target="_blank">
-      <img src="/vite.svg" class="logo" alt="Vite logo" />
-    </a>
-    <a href="https://vuejs.org/" target="_blank">
-      <img src="./assets/vue.svg" class="logo vue" alt="Vue logo" />
-    </a>
-  </div>
-  <HelloWorld msg="Vite + Vue" />
-  <v-btn variant="tonal">Vuetify Button</v-btn>
+  <v-card class="mx-auto pa-5 mt-5 w-75">
+    <v-btn color="orange-darken-2" @click="openSnackbar">Open Snackbar</v-btn>
+  </v-card>
+  <TheSnackbar :displaySnack="showSnackbar" @close="closeSnackbar" />
 </template>
 
-<style lang="scss">
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
-
-  &:hover {
-    filter: drop-shadow(0 0 2em #646cffaa);
-  }
-
-  &.vue:hover {
-    filter: drop-shadow(0 0 2em #42b883aa);
-  }
-}
-</style>
+<style lang="scss" module></style>
