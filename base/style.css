@@ -1,0 +1,37 @@
+/* Form */
+.form {
+  max-width: 500px;
+  margin: 20px auto;
+}
+
+/* App content */
+.content {
+  display: flex;
+  justify-content: center;
+  align-items: stretch;
+  flex-wrap: wrap;
+  margin: 60px auto 0;
+}
+
+/* TodoColumn */
+.cardColumn {
+  margin-bottom: 40px;
+}
+
+.titleGroup {
+  width: 100%;
+}
+
+.clearedText {
+  width: 300px;
+  margin-top: 30px;
+}
+
+/* TodoCard */
+.text-caption {
+  color: gray;
+}
+
+.no-desc {
+  font-style: italic;
+}

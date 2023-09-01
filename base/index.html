@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>V3Todo</title>
+    <link
+      href="https://meyerweb.com/eric/tools/css/reset/reset.css"
+      rel="stylesheet"
+    />
+    <link href="style.css" rel="stylesheet" />
+    <link
+      href="https://cdn.jsdelivr.net/npm/@mdi/font@4.x/css/materialdesignicons.min.css"
+      rel="stylesheet"
+    />
+    <link
+      href="https://cdn.jsdelivr.net/npm/vuetify@3.3.14/dist/vuetify.min.css"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <script src="https://unpkg.com/vue@3.3.4/dist/vue.global.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vuetify@3.3.14/dist/vuetify.min.js"></script>
+    <script src="helper.js"></script>
+
+    <!-- mount point -->
+    <div id="app"></div>
+
+    <!-- template definition -->
+    <script id="template" type="text/x-template">
+      <v-container class="text-center">
+        <!-- HEADER -->
+        <div class="text-h4 font-weight-bold">Vue3 Todo app</div>
+
+        <!-- FORM -->
+        <v-form @submit.prevent="submit" class="form">
+          <v-text-field
+            class="mb-3"
+            v-model.trim="title"
+            append-inner-icon="mdi-sticker-plus"
+            variant="underlined"
+            clear-icon="mdi-close"
+            clearable
+            label="New Todo item"
+            type="text"
+            :error="errorMsg.length > 0"
+            :error-messages="errorMsg"
+            @keyup.esc="clearTitle"
+            @click:append-inner="toggleDescField"
+            @click:clear="clearTitle"
+          />
+          <v-textarea
+            v-if="isDescVisible"
+            v-model.trim="desc"
+            label="Description"
+            type="textarea"
+            rows="3"
+            clearable
+            clear-icon="mdi-close"
+            @click:clear="clearDesc"
+          />
+          <v-btn @click.submit="submit" color="green">
+            <v-icon icon="mdi-plus-thick" class="mr-1" />
+            Add item
+          </v-btn>
+        </v-form>
+
+        <!-- APP CONTENT -->
+        <div class="content">
+          <div v-for="(todos, index) in [activeTodos, inactiveTodos]"
+            :key="index"
+            class="cardColumn"
+          >
+            <div class="d-flex justify-space-between px-7 titleGroup">
+              <div class="text-h5">{{ index === 0 ? 'Active' : 'Completed' }}</div>
+              <v-btn
+                size="small"
+                variant="tonal"
+                @click="clearList(index === 0 ? 'active' : 'inactive')"
+              >Clear</v-btn>
+            </div>
+
+            <div v-if="todos.length" class="pa-2 text-left">
+              <v-card v-for="(todo, todoIndex) in todos"
+                :key="todoIndex"
+                class="mx-auto py-3 px-2 mb-3"
+                width="300"
+                variant="elevated"
+              >
+                <v-card-title>{{ todo.title }}</v-card-title>
+                <v-card-text :class="['text-caption', !todo.desc && 'no-desc']">
+                  {{ todo.desc || 'No description' }}
+                </v-card-text>
+
+                <v-card-actions class="justify-space-between">
+                  <v-btn
+                    v-if="!todo.isCompleted"
+                    color="green"
+                    variant="tonal"
+                    icon="mdi-check"
+                    size="small"
+                    @click="markAsDone(todo.id)"
+                  />
+                  <v-btn
+                    v-else
+                    color="green"
+                    variant="tonal"
+                    icon="mdi-restore"
+                    size="small"
+                    @click="restoreTodo(todo.id)"
+                  />
+                  <v-btn
+                    color="red"
+                    variant="tonal"
+                    icon="mdi-delete-outline"
+                    size="small"
+                    @click="removeFromList(index === 0 ? 'active' : 'inactive', todo.id)"
+                  />
+                </v-card-actions>
+              </v-card>
+            </div>
+            <v-card
+              v-else
+              class="text-body-2 ma-2  no-desc clearedText"
+              text="All cleared 🎉"
+            />
+          </div>
+        </div>
+      </v-container>
+
+      <!-- FOOTER -->
+      <div class="text-center mb-10 px-5">
+        Made with Typescript, Vue3, and Vuetify
+        <br />
+        View source code <a href="#" target="_blank">here</a>
+      </div>
+
+      <!--
+        SNACKBAR
+        using vmodel directly here because structure is flattened
+      -->
+      <v-snackbar
+        v-model="showSnackbar"
+        timeout="2000"
+      >
+        {{ snackbarMsg || 'Default popup' }}
+
+        <template v-slot:actions>
+          <v-btn color="blue" variant="text" @click="closeSnackbar">OK</v-btn>
+        </template>
+      </v-snackbar>
+    </script>
+
+    <script>
+      const appSetup = {
+        template: '#template',
+        data: () => ({
+          // main
+          timeout: 500,
+          showSnackbar: false,
+          snackbarMsg: '',
+          activeTodos: [],
+          inactiveTodos: [],
+          // form
+          title: '',
+          desc: '',
+          isDescVisible: false,
+          errorMsg: '',
+        }),
+
+        computed: {
+          newTodoItem() {
+            return {
+              id: uniqueId(),
+              title: this.title,
+              desc: this.isDescVisible ? this.desc : '',
+              isCompleted: false,
+            };
+          },
+        },
+
+        methods: {
+          // form
+          clearTitle() {
+            this.title = '';
+          },
+
+          clearDesc() {
+            this.desc = '';
+          },
+
+          validateTitle() {
+            if (this.title.length === 0) {
+              this.errorMsg = 'Title cannot be empty.';
+              return;
+            }
+
+            this.errorMsg = '';
+          },
+
+          toggleDescField() {
+            this.isDescVisible = !this.isDescVisible;
+          },
+
+          submit() {
+            this.validateTitle();
+
+            if (this.errorMsg) {
+              return;
+            }
+
+            this.handleSubmit(this.newTodoItem);
+
+            this.clearTitle();
+            this.clearDesc();
+            this.isDescVisible = false;
+          },
+
+          // main
+          openSnackbar(msg) {
+            this.showSnackbar = true;
+            this.snackbarMsg = msg || '';
+          },
+
+          closeSnackbar() {
+            this.showSnackbar = false;
+            this.snackbarMsg = '';
+          },
+
+          handleSubmit(newTodo) {
+            this.activeTodos.unshift(newTodo);
+            this.openSnackbar(`"${newTodo.title}" added`);
+          },
+
+          markAsDone(id) {
+            const index = this.activeTodos.findIndex((t) => t.id === id);
+            const target = { ...this.activeTodos[index] };
+
+            target.isCompleted = true;
+            this.inactiveTodos.unshift(target);
+            this.activeTodos.splice(index, 1);
+          },
+
+          restoreTodo(id) {
+            const index = this.inactiveTodos.findIndex((t) => t.id === id);
+            const target = { ...this.inactiveTodos[index] };
+
+            target.isCompleted = false;
+            this.activeTodos.unshift(target);
+            this.inactiveTodos.splice(index, 1);
+          },
+
+          removeFromList(column, id) {
+            const targetArray =
+              column === 'active' ? this.activeTodos : this.inactiveTodos;
+            const index = targetArray.findIndex((t) => t.id === id);
+
+            targetArray.splice(index, 1);
+          },
+
+          clearList(column) {
+            const targetArray =
+              column === 'active' ? this.activeTodos : this.inactiveTodos;
+            if (targetArray.length === 0) {
+              return;
+            }
+
+            targetArray.length = 0;
+          },
+        },
+
+        created() {
+          const data = getDefaultTodos();
+          this.activeTodos = data.filter((t) => !t.isCompleted);
+          this.inactiveTodos = data.filter((t) => t.isCompleted);
+        },
+      };
+
+      const { createApp } = Vue;
+      const { createVuetify } = Vuetify;
+
+      const app = createApp(appSetup);
+      const vuetify = createVuetify({
+        theme: { defaultTheme: 'light' },
+        icons: { defaultSet: 'mdi' },
+      });
+
+      app.use(vuetify);
+      app.mount('#app');
+    </script>
+  </body>
+</html>
