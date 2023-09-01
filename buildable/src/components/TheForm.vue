@@ -54,6 +54,7 @@ export default {
       this.$emit('submit', this.newTodoItem);
       this.clearTitle();
       this.clearDesc();
+      this.isDescVisible = false;
     },
   },
 };

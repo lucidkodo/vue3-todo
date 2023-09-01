@@ -1,17 +1,21 @@
-<script setup lang="ts">
-import { ref, onMounted } from 'vue';
-import TheForm from './components/TheForm.vue';
-import TheSnackbar from './components/TheSnackbar.vue';
-import { TodoItem } from './types';
+<script lang="ts">
 import { getDefaultTodos } from './helper';
 
-onMounted(() => {
-  console.log('app mounted');
-});
+const defaultData = getDefaultTodos();
+const activeTodos = defaultData.filter((t) => !t.isCompleted);
+const completedTodos = defaultData.filter((t) => t.isCompleted);
+</script>
 
-const showSnackbar = ref<boolean>(false);
+<script setup lang="ts">
+import { ref } from 'vue';
+import TheForm from './components/TheForm.vue';
+import TheSnackbar from './components/TheSnackbar.vue';
+import TodoColumn from './components/TodoColumn.vue';
+import { TodoItem } from './types';
+
+const showSnackbar = ref<boolean>(true);
 const snackbarMsg = ref<string>('');
-const todos = ref<TodoItem[]>(getDefaultTodos());
+const todos = ref<TodoItem[]>(activeTodos);
 
 function openSnackbar(msg?: string) {
   if (showSnackbar.value === true) {
@@ -24,6 +28,7 @@ function openSnackbar(msg?: string) {
 
 function closeSnackbar() {
   showSnackbar.value = false;
+  snackbarMsg.value = '';
 }
 
 function handleSubmit(newTodo: TodoItem) {
@@ -34,41 +39,15 @@ function handleSubmit(newTodo: TodoItem) {
 
 <template>
   <v-container class="text-center">
-    <div class="text-h4">Vue3 Todo app</div>
+    <div class="text-h4 font-weight-bold">Vue3 Todo app</div>
     <TheForm @submit="handleSubmit" />
-    <div v-if="todos.length" elevation="2" class="pa-2 text-left">
-      <div v-for="(todo, index) in todos" :key="index">
-        <v-card
-          class="mx-auto mt-5 py-3 px-2"
-          max-width="344"
-          variant="outlined"
-        >
-          <v-card-title>{{ todo.title }}</v-card-title>
-          <v-card-text v-if="todo.desc.length" class="text-caption grey-text">
-            {{ todo.desc }}
-          </v-card-text>
-          <v-card-text v-else class="grey-text">
-            <i>No description.</i>
-          </v-card-text>
-          <v-card-actions class="justify-space-between">
-            <v-btn
-              color="green"
-              variant="tonal"
-              icon="mdi-check"
-              size="small"
-            />
-            <v-btn
-              color="red"
-              variant="tonal"
-              icon="mdi-delete-outline"
-              size="small"
-            />
-          </v-card-actions>
-        </v-card>
-      </div>
+
+    <div :class="$style.content">
+      <TodoColumn columnTitle="Active" :todos="todos" />
+      <TodoColumn columnTitle="Completed" :todos="completedTodos" />
     </div>
-    <p v-else>No todo.</p>
   </v-container>
+
   <TheSnackbar
     :displaySnack="showSnackbar"
     :message="snackbarMsg"
@@ -76,8 +55,12 @@ function handleSubmit(newTodo: TodoItem) {
   />
 </template>
 
-<style lang="scss">
-.grey-text {
-  color: grey;
+<style lang="scss" module>
+.content {
+  display: flex;
+  justify-content: center;
+  align-items: stretch;
+  flex-wrap: wrap;
+  margin: 60px auto 0;
 }
 </style>
