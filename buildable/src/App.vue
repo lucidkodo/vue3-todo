@@ -11,6 +11,7 @@ import { ref } from 'vue';
 import TheForm from './components/TheForm.vue';
 import TheSnackbar from './components/TheSnackbar.vue';
 import TodoColumn from './components/TodoColumn.vue';
+import TheFooter from './components/TheFooter.vue';
 import { TodoItem } from './types';
 
 const showSnackbar = ref<boolean>(false);
@@ -90,7 +91,7 @@ function clearList(column: string) {
       />
     </div>
   </v-container>
-
+  <TheFooter />
   <TheSnackbar
     :displaySnack="showSnackbar"
     :message="snackbarMsg"
