@@ -1,9 +1,9 @@
 <script lang="ts">
 import { getDefaultTodos } from './helper';
 
-const defaultData = getDefaultTodos();
-const activeTodos = defaultData.filter((t) => !t.isCompleted);
-const completedTodos = defaultData.filter((t) => t.isCompleted);
+const data = getDefaultTodos();
+const _activeTodos = data.filter((t) => !t.isCompleted);
+const _inactiveTodos = data.filter((t) => t.isCompleted);
 </script>
 
 <script setup lang="ts">
@@ -13,15 +13,12 @@ import TheSnackbar from './components/TheSnackbar.vue';
 import TodoColumn from './components/TodoColumn.vue';
 import { TodoItem } from './types';
 
-const showSnackbar = ref<boolean>(true);
+const showSnackbar = ref<boolean>(false);
 const snackbarMsg = ref<string>('');
-const todos = ref<TodoItem[]>(activeTodos);
+const activeTodos = ref<TodoItem[]>(_activeTodos);
+const inactiveTodos = ref<TodoItem[]>(_inactiveTodos);
 
 function openSnackbar(msg?: string) {
-  if (showSnackbar.value === true) {
-    return;
-  }
-
   showSnackbar.value = true;
   snackbarMsg.value = msg || '';
 }
@@ -32,8 +29,42 @@ function closeSnackbar() {
 }
 
 function handleSubmit(newTodo: TodoItem) {
-  todos.value.unshift(newTodo);
+  activeTodos.value.unshift(newTodo);
   openSnackbar(`"${newTodo.title}" added`);
+}
+
+function markAsDone(id: string) {
+  const index = activeTodos.value.findIndex((t) => t.id === id);
+  const target = { ...activeTodos.value[index] };
+
+  target.isCompleted = true;
+  inactiveTodos.value.unshift(target);
+  activeTodos.value.splice(index, 1);
+}
+
+function restoreTodo(id: string) {
+  const index = inactiveTodos.value.findIndex((t) => t.id === id);
+  const target = { ...inactiveTodos.value[index] };
+
+  target.isCompleted = false;
+  activeTodos.value.unshift(target);
+  inactiveTodos.value.splice(index, 1);
+}
+
+function removeFromList(column: string, id: string) {
+  const targetArray = column === 'active' ? activeTodos : inactiveTodos;
+  const index = targetArray.value.findIndex((t) => t.id === id);
+
+  targetArray.value.splice(index, 1);
+}
+
+function clearList(column: string) {
+  const targetArray = column === 'active' ? activeTodos : inactiveTodos;
+  if (targetArray.value.length === 0) {
+    return;
+  }
+
+  targetArray.value.length = 0;
 }
 </script>
 
@@ -43,8 +74,20 @@ function handleSubmit(newTodo: TodoItem) {
     <TheForm @submit="handleSubmit" />
 
     <div :class="$style.content">
-      <TodoColumn columnTitle="Active" :todos="todos" />
-      <TodoColumn columnTitle="Completed" :todos="completedTodos" />
+      <TodoColumn
+        columnTitle="Active"
+        :todos="activeTodos"
+        @done="markAsDone"
+        @delete="removeFromList('active', $event)"
+        @clear="clearList('active')"
+      />
+      <TodoColumn
+        columnTitle="Completed"
+        :todos="inactiveTodos"
+        @restore="restoreTodo"
+        @delete="removeFromList('inactive', $event)"
+        @clear="clearList('inactive')"
+      />
     </div>
   </v-container>
 

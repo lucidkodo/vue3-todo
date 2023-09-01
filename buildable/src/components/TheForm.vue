@@ -63,12 +63,13 @@ export default {
 <template>
   <v-form @submit.prevent="submit" :class="$style.form">
     <v-text-field
+      class="mb-3"
       v-model.trim="title"
       append-inner-icon="mdi-sticker-plus"
       variant="underlined"
       clear-icon="mdi-close"
       clearable
-      label="New Todo item"
+      label="New todo"
       type="text"
       :error="errorMsg.length > 0"
       :error-messages="errorMsg"
@@ -88,7 +89,7 @@ export default {
     />
     <v-btn @click.submit="submit" color="green">
       <v-icon icon="mdi-plus-thick" class="mr-1" />
-      Add item
+      new todo
     </v-btn>
   </v-form>
 </template>
