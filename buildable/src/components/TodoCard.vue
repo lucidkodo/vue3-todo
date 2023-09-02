@@ -10,12 +10,20 @@ const emit = defineEmits<TodoEvent>();
 </script>
 
 <template>
-  <v-card class="mx-auto py-3 px-2 mb-3" width="300" variant="elevated">
-    <v-card-title>{{ todo.title }}</v-card-title>
-    <v-card-text :class="['text-caption', !todo.desc && 'no-desc']">
+  <v-card class="mx-auto py-3 px-2 mb-3" variant="elevated">
+    <v-card-title :class="todo.isCompleted && 'cross-off'">
+      {{ todo.title }}
+    </v-card-title>
+    <v-card-text
+      :class="[
+        'text-caption',
+        { 'no-desc': !todo.desc },
+        { 'cross-off': todo.isCompleted },
+      ]"
+    >
       {{ todo.desc || 'No description' }}
     </v-card-text>
-    <v-card-actions class="justify-space-between">
+    <v-card-actions>
       <v-btn
         v-if="!todo.isCompleted"
         color="green"
@@ -33,6 +41,7 @@ const emit = defineEmits<TodoEvent>();
         @click="emit('restore', todo.id)"
       />
       <v-btn
+        class="ml-5"
         color="red"
         variant="tonal"
         icon="mdi-delete-outline"
@@ -44,6 +53,10 @@ const emit = defineEmits<TodoEvent>();
 </template>
 
 <style lang="scss">
+.cross-off {
+  text-decoration: line-through;
+}
+
 .text-caption {
   color: gray;
 }

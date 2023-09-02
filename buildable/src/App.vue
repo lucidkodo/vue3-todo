@@ -8,20 +8,21 @@ const _inactiveTodos = data.filter((t) => t.isCompleted);
 
 <script setup lang="ts">
 import { ref } from 'vue';
+import { TodoItem } from './types';
 import TheForm from './components/TheForm.vue';
 import TheSnackbar from './components/TheSnackbar.vue';
-import TodoColumn from './components/TodoColumn.vue';
+import TodoTab from './components/TodoTab.vue';
 import TheFooter from './components/TheFooter.vue';
-import { TodoItem } from './types';
 
 const showSnackbar = ref<boolean>(false);
 const snackbarMsg = ref<string>('');
 const activeTodos = ref<TodoItem[]>(_activeTodos);
 const inactiveTodos = ref<TodoItem[]>(_inactiveTodos);
+const tab = ref<number>(0);
 
-function openSnackbar(msg?: string) {
+function openSnackbar(msg: string) {
   showSnackbar.value = true;
-  snackbarMsg.value = msg || '';
+  snackbarMsg.value = msg;
 }
 
 function closeSnackbar() {
@@ -56,6 +57,7 @@ function removeFromList(column: string, id: string) {
   const targetArray = column === 'active' ? activeTodos : inactiveTodos;
   const index = targetArray.value.findIndex((t) => t.id === id);
 
+  openSnackbar(`"${targetArray.value[index].title}" removed`);
   targetArray.value.splice(index, 1);
 }
 
@@ -74,22 +76,41 @@ function clearList(column: string) {
     <div class="text-h4 font-weight-bold">Vue3 Todo app</div>
     <TheForm @submit="handleSubmit" />
 
-    <div :class="$style.content">
-      <TodoColumn
-        columnTitle="Active"
-        :todos="activeTodos"
-        @done="markAsDone"
-        @delete="removeFromList('active', $event)"
-        @clear="clearList('active')"
-      />
-      <TodoColumn
-        columnTitle="Completed"
-        :todos="inactiveTodos"
-        @restore="restoreTodo"
-        @delete="removeFromList('inactive', $event)"
-        @clear="clearList('inactive')"
-      />
-    </div>
+    <v-card :class="$style.slide">
+      <v-tabs v-model="tab">
+        <v-tab
+          v-for="(data, index) in [activeTodos, inactiveTodos]"
+          :key="index"
+          :value="index"
+        >
+          {{ index === 0 ? 'Active' : 'Completed' }}
+          ({{ data.length }})
+        </v-tab>
+      </v-tabs>
+
+      <v-card-text>
+        <v-window v-model="tab">
+          <v-window-item>
+            <TodoTab
+              columnTitle="Active"
+              :todos="activeTodos"
+              @done="markAsDone"
+              @delete="removeFromList('active', $event)"
+              @clear="clearList('active')"
+            />
+          </v-window-item>
+          <v-window-item>
+            <TodoTab
+              columnTitle="Completed"
+              :todos="inactiveTodos"
+              @restore="restoreTodo"
+              @delete="removeFromList('inactive', $event)"
+              @clear="clearList('inactive')"
+            />
+          </v-window-item>
+        </v-window>
+      </v-card-text>
+    </v-card>
   </v-container>
   <TheFooter />
   <TheSnackbar
@@ -100,11 +121,8 @@ function clearList(column: string) {
 </template>
 
 <style lang="scss" module>
-.content {
-  display: flex;
-  justify-content: center;
-  align-items: stretch;
-  flex-wrap: wrap;
+.slide {
+  max-width: 600px;
   margin: 60px auto 0;
 }
 </style>

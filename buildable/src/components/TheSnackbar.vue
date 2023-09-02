@@ -6,7 +6,6 @@ import { toRefs } from 'vue';
 
 interface SnackbarProps {
   displaySnack: boolean;
-  timeout?: number;
   message?: string;
 }
 
@@ -18,7 +17,7 @@ interface SnackbarEmission {
  * Define snackbar properties and event emission
  */
 const props = defineProps<SnackbarProps>();
-const { displaySnack, timeout, message } = toRefs(props);
+const { displaySnack, message } = toRefs(props);
 const emit = defineEmits<SnackbarEmission>();
 </script>
 
@@ -30,10 +29,9 @@ const emit = defineEmits<SnackbarEmission>();
     <v-snackbar
       v-bind:model-value="displaySnack"
       v-on:update:model-value="emit('close')"
-      :timeout="timeout || 2000"
+      timeout="2000"
     >
-      {{ message || 'Default popup' }}
-
+      {{ message }}
       <template v-slot:actions>
         <v-btn color="blue" variant="text" @click="emit('close')">OK</v-btn>
       </template>
