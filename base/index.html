@@ -66,70 +66,105 @@
         </v-form>
 
         <!-- APP CONTENT -->
-        <div class="content">
-          <div v-for="(todos, index) in [activeTodos, inactiveTodos]"
-            :key="index"
-            class="cardColumn"
-          >
-            <div class="d-flex justify-space-between px-7 titleGroup">
-              <div class="text-h5">{{ index === 0 ? 'Active' : 'Completed' }}</div>
-              <v-btn
-                size="small"
-                variant="tonal"
-                @click="clearList(index === 0 ? 'active' : 'inactive')"
-              >Clear</v-btn>
-            </div>
+        <v-card class="slide">
+          <v-tabs v-model="tab">
+            <v-tab
+              v-for="(data, index) in [activeTodos, inactiveTodos]"
+              :key="index"
+              :value="index"
+            >
+              {{ index === 0 ? 'Active' : 'Completed' }}
+              ({{ data.length }})
+            </v-tab>
+          </v-tabs>
 
-            <div v-if="todos.length" class="pa-2 text-left">
-              <v-card v-for="(todo, todoIndex) in todos"
-                :key="todoIndex"
-                class="mx-auto py-3 px-2 mb-3"
-                width="300"
-                variant="elevated"
+          <v-card-text>
+            <v-window v-model="tab">
+              <v-window-item v-for="(todoArray, arrayIndex) in [activeTodos, inactiveTodos]"
+                :key="arrayIndex"
+                :value="arrayIndex"
               >
-                <v-card-title>{{ todo.title }}</v-card-title>
-                <v-card-text :class="['text-caption', !todo.desc && 'no-desc']">
-                  {{ todo.desc || 'No description' }}
-                </v-card-text>
+                <div class="text-right">
+                  <v-btn size="small" variant="tonal" @click="clearList">Clear</v-btn>
+                </div>
+                <div>
+                  <div v-if="paginatedItems.length" class="text-left">
+                    <v-card v-for="(todo, todoIndex) in paginatedItems"
+                      :key="todoIndex"
+                      class="mx-auto py-3 px-2 mb-3"
+                      variant="elevated"
+                    >
+                      <v-card-title :class="{ 'cross-off': todo.isCompleted }">
+                        {{ todo.title }}
+                      </v-card-title>
+                      <v-card-text
+                        :class="[
+                          'text-caption',
+                          { 'no-desc': !todo.desc },
+                          { 'cross-off': todo.isCompleted },
+                        ]"
+                      >
+                        {{ todo.desc || 'No description' }}
+                      </v-card-text>
 
-                <v-card-actions class="justify-space-between">
-                  <v-btn
-                    v-if="!todo.isCompleted"
-                    color="green"
-                    variant="tonal"
-                    icon="mdi-check"
-                    size="small"
-                    @click="markAsDone(todo.id)"
-                  />
-                  <v-btn
+                      <v-card-actions>
+                        <v-btn
+                          v-if="!todo.isCompleted"
+                          color="green"
+                          variant="tonal"
+                          icon="mdi-check"
+                          size="small"
+                          @click="markAsDone(todo.id)"
+                        />
+                        <v-btn
+                          v-else
+                          color="green"
+                          variant="tonal"
+                          icon="mdi-restore"
+                          size="small"
+                          @click="restoreTodo(todo.id)"
+                        />
+                        <v-btn
+                          class="ml-5"
+                          color="red"
+                          variant="tonal"
+                          icon="mdi-delete-outline"
+                          size="small"
+                          @click="removeFromList(arrayIndex === 0 ? 'active' : 'inactive', todo.id)"
+                        />
+                      </v-card-actions>
+                    </v-card>
+                    <v-pagination
+                      v-if="arrayIndex === 0"
+                      v-model="activePage"
+                      class="text-center max-width my-4"
+                      size="small"
+                      total-visible="3"
+                      :length="pagesAvailable(todoArray)"
+                    />
+                    <v-pagination
+                      v-else
+                      v-model="inactivePage"
+                      class="text-center max-width my-4"
+                      size="small"
+                      total-visible="3"
+                      :length="pagesAvailable(todoArray)"
+                    />
+                  </div>
+                  <v-card
                     v-else
-                    color="green"
-                    variant="tonal"
-                    icon="mdi-restore"
-                    size="small"
-                    @click="restoreTodo(todo.id)"
+                    :class="['text-body-2 ma-2 no-desc']"
+                    text="All cleared 🎉"
                   />
-                  <v-btn
-                    color="red"
-                    variant="tonal"
-                    icon="mdi-delete-outline"
-                    size="small"
-                    @click="removeFromList(index === 0 ? 'active' : 'inactive', todo.id)"
-                  />
-                </v-card-actions>
-              </v-card>
-            </div>
-            <v-card
-              v-else
-              class="text-body-2 ma-2  no-desc clearedText"
-              text="All cleared 🎉"
-            />
-          </div>
-        </div>
+                </div>
+              </v-window-item>
+            </v-window>
+          </v-card-text>
+        </v-card>
       </v-container>
 
       <!-- FOOTER -->
-      <div class="text-center mb-10 px-5">
+      <div class="text-center my-10 px-5">
         Made with Typescript, Vue3, and Vuetify
         <br />
         View source code <a href="#" target="_blank">here</a>
@@ -166,6 +201,11 @@
           desc: '',
           isDescVisible: false,
           errorMsg: '',
+          // pagination
+          tab: 0,
+          activePage: 1,
+          inactivePage: 1,
+          itemsPerPage: 5,
         }),
 
         computed: {
@@ -176,6 +216,19 @@
               desc: this.isDescVisible ? this.desc : '',
               isCompleted: false,
             };
+          },
+          paginatedItems() {
+            if (this.tab === 0) {
+              const chunkStart = (this.activePage - 1) * this.itemsPerPage;
+              const chunkEnd = chunkStart + this.itemsPerPage;
+
+              return this.activeTodos.slice(chunkStart, chunkEnd);
+            }
+
+            const chunkStart = (this.inactivePage - 1) * this.itemsPerPage;
+            const chunkEnd = chunkStart + this.itemsPerPage;
+
+            return this.inactiveTodos.slice(chunkStart, chunkEnd);
           },
         },
 
@@ -258,14 +311,19 @@
             targetArray.splice(index, 1);
           },
 
-          clearList(column) {
+          clearList(columnIndex) {
             const targetArray =
-              column === 'active' ? this.activeTodos : this.inactiveTodos;
+              this.tab === 0 ? this.activeTodos : this.inactiveTodos;
+
             if (targetArray.length === 0) {
               return;
             }
 
             targetArray.length = 0;
+          },
+
+          pagesAvailable(todos) {
+            return Math.ceil(todos.length / this.itemsPerPage);
           },
         },
 

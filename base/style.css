@@ -1,16 +1,12 @@
+.slide {
+  max-width: 600px;
+  margin: 60px auto 0;
+}
+
 /* Form */
 .form {
   max-width: 500px;
   margin: 20px auto;
-}
-
-/* App content */
-.content {
-  display: flex;
-  justify-content: center;
-  align-items: stretch;
-  flex-wrap: wrap;
-  margin: 60px auto 0;
 }
 
 /* TodoColumn */
@@ -23,11 +19,14 @@
 }
 
 .clearedText {
-  width: 300px;
   margin-top: 30px;
 }
 
 /* TodoCard */
+.cross-off {
+  text-decoration: line-through;
+}
+
 .text-caption {
   color: gray;
 }
