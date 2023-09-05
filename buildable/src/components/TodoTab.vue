@@ -13,6 +13,10 @@ const currentPage = ref<number>(1);
 const itemsPerPage = 5;
 
 const paginatedItems = computed(() => {
+  if (props.todos.length % itemsPerPage === 0 && currentPage.value > 1) {
+    currentPage.value = currentPage.value - 1;
+  }
+
   const chunkStart = (currentPage.value - 1) * itemsPerPage;
   const chunkEnd = chunkStart + itemsPerPage;
 
@@ -41,7 +45,7 @@ function clearTodoList() {
 </script>
 
 <template>
-  <div class="text-right">
+  <div class="text-right mb-3">
     <v-btn size="small" variant="tonal" @click="clearTodoList">Clear</v-btn>
   </div>
   <div>

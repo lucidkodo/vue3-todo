@@ -84,7 +84,7 @@
                 :key="arrayIndex"
                 :value="arrayIndex"
               >
-                <div class="text-right">
+                <div class="text-right mb-3">
                   <v-btn size="small" variant="tonal" @click="clearList">Clear</v-btn>
                 </div>
                 <div>
@@ -218,17 +218,34 @@
             };
           },
           paginatedItems() {
+            const targetArray =
+              this.tab === 0 ? this.activeTodos : this.inactiveTodos;
+
             if (this.tab === 0) {
+              if (
+                targetArray.length % this.itemsPerPage === 0 &&
+                this.activePage > 1
+              ) {
+                this.activePage = this.activePage - 1;
+              }
+
               const chunkStart = (this.activePage - 1) * this.itemsPerPage;
               const chunkEnd = chunkStart + this.itemsPerPage;
 
-              return this.activeTodos.slice(chunkStart, chunkEnd);
+              return targetArray.slice(chunkStart, chunkEnd);
+            }
+
+            if (
+              targetArray.length % this.itemsPerPage === 0 &&
+              this.inactivePage > 1
+            ) {
+              this.inactivePage = this.inactivePage - 1;
             }
 
             const chunkStart = (this.inactivePage - 1) * this.itemsPerPage;
             const chunkEnd = chunkStart + this.itemsPerPage;
 
-            return this.inactiveTodos.slice(chunkStart, chunkEnd);
+            return targetArray.slice(chunkStart, chunkEnd);
           },
         },
 
